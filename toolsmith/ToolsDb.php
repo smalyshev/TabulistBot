@@ -2,6 +2,7 @@
 
 /**
  * Connections to tools databases
+ * Docs: https://wikitech.wikimedia.org/wiki/Help:Toolforge/Database
  */
 class ToolsDb
 {

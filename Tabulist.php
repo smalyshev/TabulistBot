@@ -1,4 +1,5 @@
 <?php
+require 'toolsmith/ToolsDb.php';
 
 define( 'DB_NAME', "tabulist" );
 define( 'DATA_TALK_NS', 487 );
@@ -28,4 +29,9 @@ function updateCommonsPagesList( $wiki ) {
 
 		$tool_db->query( $sql, ['wiki' => $wiki, 'page' => $page, 'ts' => $ts] );
 	}
+
+	$tool_db->query( "DELETE FROM pagestatus WHERE `status`='CHECKING' AND wiki=:wiki", ['wiki' => $wiki] );
 }
+
+// For now
+updateCommonsPagesList( 'commonswiki' );
