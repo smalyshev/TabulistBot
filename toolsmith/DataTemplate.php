@@ -41,7 +41,7 @@ class DataTemplate
 	public function dropExtraFields( array $fields ) {
 		foreach ( $this->fields as $name => $value ) {
 			// we always keep item fields as other fields may use them
-			if ( !isset( $fields[$name] ) && $value !== 'item' ) {
+			if ( $value !== 'item' && !isset( $fields[$name] ) ) {
 				unset( $this->fields[$name] );
 			}
 		}

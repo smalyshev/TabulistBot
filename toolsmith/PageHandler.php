@@ -9,7 +9,6 @@ use Mediawiki\DataModel\Revision;
 
 class PageHandler
 {
-
 	/**
 	 * @var MediawikiApi
 	 */
@@ -52,7 +51,7 @@ class PageHandler
 		return $pageRevision->getContent()->getData();
 	}
 
-	private $knownFields = [
+	private static $knownFields = [
 		'item'        => 'item',
 		'label'       => 'label',
 		'description' => 'description',
@@ -97,8 +96,8 @@ TEMPLATE;
 				if ( $column[0] === '?' ) {
 					$fields[substr( $column, 1 )] = "string";
 				} else {
-					if ( isset( $this->knownFields[$column] ) ) {
-						$fields[$column] = $this->knownFields[$column];
+					if ( isset( self::$knownFields[$column] ) ) {
+						$fields[$column] = self::$knownFields[$column];
 					} else {
 						return $this->error( "Unknown field: $column" );
 					}
@@ -178,6 +177,7 @@ TEMPLATE;
 		if ( empty( $data['schema']['fields'] ) ) {
 			return false;
 		}
+		$fields = [];
 		foreach ( $data['schema']['fields'] as $field ) {
 			if ( empty( $field['name'] ) || empty( $field['type'] ) ) {
 				continue;

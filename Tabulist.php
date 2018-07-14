@@ -1,9 +1,6 @@
 <?php
 
-use Mediawiki\Api\MediawikiFactory;
-
-require_once(__DIR__ . '/vendor/autoload.php');
-require 'toolsmith/ToolsDb.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 define( 'DB_NAME', "tabulist" );
 define( 'DATA_TALK_NS', 487 );
@@ -12,7 +9,7 @@ define( 'TEMPLATE', 'Wikidata_tabular' );
 define( 'SPARQL_ENDPOINT', 'https://query.wikidata.org/sparql' );
 
 function updateCommonsPagesList( $wiki ) {
-	$ts = date( 'YmdHis', time() );
+	$ts = date( 'YmdHis' );
 	$tool_db = ToolsDb::getLocal( DB_NAME );
 
 	$sql = "UPDATE pagestatus SET `status`='CHECKING' WHERE wiki='$wiki' AND page LIKE 'Data_talk:%'";
@@ -27,7 +24,9 @@ function updateCommonsPagesList( $wiki ) {
 	$result = $replica->query( $sql, ['title' => TEMPLATE, 'ns' => DATA_TALK_NS] );
 	print "{$result->rowCount()} pages found.\n";
 	foreach ( $result as $row ) {
-		if ( $row->page_namespace !== DATA_TALK_NS ) continue;
+		if ( $row->page_namespace !== DATA_TALK_NS ) {
+			continue;
+		}
 		$page = 'Data_talk:' . $row->page_title;
 		$sql = "INSERT INTO pagestatus (wiki,page,status,message,timestamp) 
 				VALUES (:wiki,:page,'WAITING','',:ts)
@@ -41,7 +40,7 @@ function updateCommonsPagesList( $wiki ) {
 
 function updatePage( $wiki, $wikiServer, $page ) {
 	$tool_db = ToolsDb::getLocal( DB_NAME );
-	$ts = date( 'YmdHis', time() );
+	$ts = date( 'YmdHis' );
 
 	$tool_db->query( "UPDATE pagestatus SET `status`='RUNNING',`message`='',timestamp=:ts WHERE wiki=:wiki and page=:page",
 		['ts' => $ts, 'wiki' => $wiki . "wiki", 'page' => $page] );
@@ -55,6 +54,7 @@ function updatePage( $wiki, $wikiServer, $page ) {
 		$status = "OK";
 	}
 
+	$ts = date( 'YmdHis' );
 	$tool_db->query( "UPDATE pagestatus SET `status`=:status,`message`=:msg,timestamp=:ts WHERE wiki=:wiki and page=:page",
 		['ts' => $ts, 'wiki' => $wiki . "wiki", 'page' => $page, 'msg' => $message, "status" => $status] );
 }
