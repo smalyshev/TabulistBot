@@ -1,0 +1,14 @@
+{
+    "name": "TabulistBot",
+    "type": "application",
+    "description": "Tabulist bot, see https://commons.wikimedia.org/wiki/User:TabulistBot",
+    "keywords": ["Mediawiki", "Wikimedia Commons", "Wikidata"],
+    "license": "CC0",
+    "require": {
+        "addwiki/mediawiki-api": "~0.7.0",
+        "benestar/asparagus": "~0.4"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-master"
+    }
+}
