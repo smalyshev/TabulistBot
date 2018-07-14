@@ -5,6 +5,7 @@
  */
 class DataTemplate
 {
+
 	// http://www.wikidata.org/entity/
 	const PREFIX_LEN = 31;
 	/**
@@ -34,19 +35,6 @@ class DataTemplate
 		$this->fields[$field] = $type;
 	}
 
-	/**
-	 * Remove fields that do not appear as keys in $fields.
-	 * @param array $fields
-	 */
-	public function dropExtraFields( array $fields ) {
-		foreach ( $this->fields as $name => $value ) {
-			// we always keep item fields as other fields may use them
-			if ( $value !== 'item' && !isset( $fields[$name] ) ) {
-				unset( $this->fields[$name] );
-			}
-		}
-	}
-
 	public function getSPARQL() {
 		return $this->sparql;
 	}
@@ -64,6 +52,19 @@ class DataTemplate
 
 	protected function itemFormat( $value ) {
 		return substr( $value, self::PREFIX_LEN );
+	}
+
+	/**
+	 * Arrange data according to the order of fields.
+	 * Keys are not preserved.
+	 * @param array $data
+	 */
+	public function arrangeRows( array $data ) {
+		$out = [];
+		foreach ( $this->fields as $name => $value ) {
+			$out[] = $data[$name];
+		}
+		return $out;
 	}
 
 }

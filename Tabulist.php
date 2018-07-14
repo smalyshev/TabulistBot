@@ -7,6 +7,7 @@ define( 'DATA_TALK_NS', 487 );
 // DB name - with underscore!
 define( 'TEMPLATE', 'Wikidata_tabular' );
 define( 'SPARQL_ENDPOINT', 'https://query.wikidata.org/sparql' );
+define( 'DEBUG', true );
 
 function updateCommonsPagesList( $wiki ) {
 	$ts = date( 'YmdHis' );
@@ -24,7 +25,7 @@ function updateCommonsPagesList( $wiki ) {
 	$result = $replica->query( $sql, ['title' => TEMPLATE, 'ns' => DATA_TALK_NS] );
 	print "{$result->rowCount()} pages found.\n";
 	foreach ( $result as $row ) {
-		if ( $row->page_namespace !== DATA_TALK_NS ) {
+		if ( $row->page_namespace != DATA_TALK_NS ) {
 			continue;
 		}
 		$page = 'Data_talk:' . $row->page_title;

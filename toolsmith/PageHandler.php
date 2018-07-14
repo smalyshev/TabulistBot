@@ -9,6 +9,7 @@ use Mediawiki\DataModel\Revision;
 
 class PageHandler
 {
+
 	/**
 	 * @var MediawikiApi
 	 */
@@ -99,7 +100,7 @@ TEMPLATE;
 					if ( isset( self::$knownFields[$column] ) ) {
 						$fields[$column] = self::$knownFields[$column];
 					} else {
-						return $this->error( "Unknown field: $column" );
+						return $this->error( "Unknown field: [$column]" );
 					}
 				}
 			}
@@ -127,15 +128,8 @@ TEMPLATE;
 			return $this->error( "Could not parse tabular template" );
 		}
 
-		if ( !$this->parseTabularHeader( $parsedData, $template ) ) {
-			return $this->error( "Could not parse tabular header" );
-		}
-
 		$newData = $this->getTabularData( $template );
 
-		if ( !$newData ) {
-			return $this->error( "Data retrieval failed" );
-		}
 		if ( !isset( $this->force_update ) && $newData == $parsedData['data'] ) {
 			$this->status = 'no change';
 			return true;
@@ -155,7 +149,18 @@ TEMPLATE;
 		return true;
 	}
 
+	/**
+	 * Save data to the page
+	 * @param string $title
+	 * @param string $content
+	 * @param string $summary
+	 * @return bool|false
+	 */
 	protected function savePage( $title, $content, $summary ) {
+		if ( DEBUG ) {
+			print "$title($summary): $content";
+			return true;
+		}
 		$pageHandle = $this->services->newPageGetter()->getFromTitle( $title );
 		$pageRevision = $pageHandle->getRevisions()->getLatest();
 		if ( !$pageRevision || !is_object( $pageRevision ) ) {
@@ -177,19 +182,8 @@ TEMPLATE;
 		if ( empty( $data['schema']['fields'] ) ) {
 			return false;
 		}
-		$fields = [];
-		foreach ( $data['schema']['fields'] as $field ) {
-			if ( empty( $field['name'] ) || empty( $field['type'] ) ) {
-				continue;
-			}
-			$fields[$field['name']] = true;
-			if ( !$template->hasField( $field['name'] ) ) {
-				return $this->error( "Unknown field {$field['name']}" );
-			}
-		}
-		$template->dropExtraFields( $fields );
 
-		return true;
+		return $data['schema']['fields'];
 	}
 
 	/**
@@ -245,6 +239,10 @@ TEMPLATE;
 				}
 			}
 		}
+		// Reassemble data in correct order
+		return array_map( function ( $row ) use ( $template ) {
+			return $template->arrangeRows( $row );
+		}, $output );
 	}
 
 	protected function runQuery( $sparql ) {
