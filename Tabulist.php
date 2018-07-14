@@ -1,7 +1,5 @@
 <?php
-
 use GetOpt\GetOpt;
-use GetOpt\Option;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -26,7 +24,9 @@ function updateCommonsPagesList( $wiki ) {
               AND page.page_namespace = :ns";
 
 	$result = $replica->query( $sql, ['title' => TEMPLATE, 'ns' => DATA_TALK_NS] );
-	print "{$result->rowCount()} pages found.\n";
+	if ( $GLOBALS['VERBOSE'] ) {
+		print "{$result->rowCount()} pages found.\n";
+	}
 	foreach ( $result as $row ) {
 		if ( $row->page_namespace != DATA_TALK_NS ) {
 			continue;
@@ -58,6 +58,10 @@ function updatePage( $wiki, $wikiServer, $page ) {
 		$status = "OK";
 	}
 
+	if ( $GLOBALS['VERBOSE'] ) {
+		print "$status: $message\n";
+	}
+
 	$ts = date( 'YmdHis' );
 	$tool_db->query( "UPDATE pagestatus SET `status`=:status,`message`=:msg,timestamp=:ts WHERE wiki=:wiki and page=:page",
 		['ts' => $ts, 'wiki' => $wiki, 'page' => $page, 'msg' => $message, "status" => $status] );
@@ -67,13 +71,18 @@ $getopt = new GetOpt( [
 	['h', 'help', GetOpt::NO_ARGUMENT, "Usage instructions"],
 	['u', 'update', GetOpt::NO_ARGUMENT, 'Update pages list'],
 	['p', 'page', GetOpt::REQUIRED_ARGUMENT, 'Update specific page'],
+	['v', 'verbose', GetOpt::NO_ARGUMENT, "More verbose output"],
 ] );
 
 $getopt->process();
 
-if($getopt->count() == 0 || $getopt->getOption('h')) {
+if ( $getopt->count() == 0 || $getopt->getOption( 'h' ) ) {
 	echo $getopt->getHelpText();
-	exit(0);
+	exit( 0 );
+}
+
+if ( $getopt->getOption( 'v' ) ) {
+	$VERBOSE = true;
 }
 
 if ( $getopt->getOption( 'u' ) ) {
