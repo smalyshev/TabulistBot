@@ -127,7 +127,7 @@ TEMPLATE;
 			return $this->error( "Could not parse tabular template" );
 		}
 
-		if ( !$this->parseTabularHeader( $template, $parsedData ) ) {
+		if ( !$this->parseTabularHeader( $parsedData, $template ) ) {
 			return $this->error( "Could not parse tabular header" );
 		}
 
@@ -173,7 +173,7 @@ TEMPLATE;
 		return true;
 	}
 
-	protected function parseTabularHeader( $data, DataTemplate $template ) {
+	protected function parseTabularHeader( array $data, DataTemplate $template ) {
 		if ( empty( $data['schema']['fields'] ) ) {
 			return false;
 		}
