@@ -18,7 +18,7 @@ class TermFetcher
 	public function fetchTerm( $termIDs, $type ) {
 		$out = [];
 		foreach ( array_chunk( $termIDs, self::CHUNK_SIZE ) as $chunk ) {
-			$params = str_repeat( '?,', self::CHUNK_SIZE - 1 ) . "?";
+			$params = str_repeat( '?,', count($chunk) - 1 ) . "?";
 			$sql = "SELECT term_full_entity_id,term_language,term_text FROM wb_terms WHERE term_full_entity_id IN ($params) AND term_type='$type'";
 			$results = $this->db->query( $sql, $chunk );
 			foreach ( $results as $result ) {

@@ -1,4 +1,5 @@
 <?php
+
 use GetOpt\GetOpt;
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -8,7 +9,6 @@ define( 'DATA_TALK_NS', 487 );
 // DB name - with underscore!
 define( 'TEMPLATE', 'Wikidata_tabular' );
 define( 'SPARQL_ENDPOINT', 'https://query.wikidata.org/sparql' );
-define( 'DEBUG', true );
 
 function updateCommonsPagesList( $wiki ) {
 	$ts = date( 'YmdHis' );
@@ -50,6 +50,9 @@ function updatePage( $wiki, $wikiServer, $page ) {
 		['ts' => $ts, 'wiki' => $wiki, 'page' => $page] );
 
 	$handler = new PageHandler( $wikiServer, SPARQL_ENDPOINT );
+	if ( $GLOBALS['VERBOSE'] ) {
+		$handler->debugMode( true );
+	}
 	if ( !$handler->updateTemplateData( $page, TEMPLATE ) ) {
 		$message = implode( "\n", $handler->getErrors() );
 		$status = "FAILED";

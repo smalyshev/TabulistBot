@@ -34,6 +34,10 @@ class PageHandler
 	 * @var TermFetcher
 	 */
 	private $terms;
+	/**
+	 * @var boolean
+	 */
+	private $debugMode;
 
 	public function __construct( $server, $sparql ) {
 		$this->api = new MediawikiApi( 'https://' . $server . '/w/api.php' );
@@ -155,8 +159,8 @@ TEMPLATE;
 	 * @return bool|false
 	 */
 	protected function savePage( $title, $content, $summary ) {
-		if ( DEBUG ) {
-			print "$title($summary): $content";
+		if ( $this->debugMode ) {
+			print "$title($summary): $content\n";
 			return true;
 		}
 		$pageHandle = $this->services->newPageGetter()->getFromTitle( $title );
@@ -255,5 +259,9 @@ TEMPLATE;
 			}
 			return $res;
 		}, $result['bindings'] );
+	}
+
+	public function debugMode( $debug ) {
+		$this->debugMode = $debug;
 	}
 }
