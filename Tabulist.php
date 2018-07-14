@@ -1,10 +1,15 @@
 <?php
+
+use Mediawiki\Api\MediawikiFactory;
+
+require_once(__DIR__ . '/vendor/autoload.php');
 require 'toolsmith/ToolsDb.php';
 
 define( 'DB_NAME', "tabulist" );
 define( 'DATA_TALK_NS', 487 );
 // DB name - with underscore!
 define( 'TEMPLATE', 'Wikidata_tabular' );
+define( 'SPARQL_ENDPOINT', 'https://query.wikidata.org/sparql' );
 
 function updateCommonsPagesList( $wiki ) {
 	$ts = date( 'YmdHis', time() );
@@ -20,6 +25,7 @@ function updateCommonsPagesList( $wiki ) {
               AND page.page_namespace = :ns";
 
 	$result = $replica->query( $sql, ['title' => TEMPLATE, 'ns' => DATA_TALK_NS] );
+	print "{$result->rowCount()} pages found.\n";
 	foreach ( $result as $row ) {
 		if ( $row->page_namespace !== DATA_TALK_NS ) continue;
 		$page = 'Data_talk:' . $row->page_title;
@@ -33,5 +39,26 @@ function updateCommonsPagesList( $wiki ) {
 	$tool_db->query( "DELETE FROM pagestatus WHERE `status`='CHECKING' AND wiki=:wiki", ['wiki' => $wiki] );
 }
 
+function updatePage( $wiki, $wikiServer, $page ) {
+	$tool_db = ToolsDb::getLocal( DB_NAME );
+	$ts = date( 'YmdHis', time() );
+
+	$tool_db->query( "UPDATE pagestatus SET `status`='RUNNING',`message`='',timestamp=:ts WHERE wiki=:wiki and page=:page",
+		['ts' => $ts, 'wiki' => $wiki . "wiki", 'page' => $page] );
+
+	$handler = new PageHandler( $wikiServer, SPARQL_ENDPOINT );
+	if ( !$handler->updateTemplateData( $page, TEMPLATE ) ) {
+		$message = implode( "\n", $handler->getErrors() );
+		$status = "FAILED";
+	} else {
+		$message = $handler->getStatus();
+		$status = "OK";
+	}
+
+	$tool_db->query( "UPDATE pagestatus SET `status`=:status,`message`=:msg,timestamp=:ts WHERE wiki=:wiki and page=:page",
+		['ts' => $ts, 'wiki' => $wiki . "wiki", 'page' => $page, 'msg' => $message, "status" => $status] );
+}
+
 // For now
 updateCommonsPagesList( 'commonswiki' );
+// updatePage( "commons", "commons.wikimedia.org", "Data_talk:Sandbox/Smalyshev/test.tab" );
