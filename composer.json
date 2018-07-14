@@ -6,7 +6,8 @@
     "license": "CC0",
     "require": {
         "addwiki/mediawiki-api": "~0.7.0",
-        "benestar/asparagus": "~0.4"
+        "benestar/asparagus": "~0.4",
+        "ulrichsg/getopt-php": "^3.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master"

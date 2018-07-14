@@ -62,7 +62,11 @@ class DataTemplate
 	public function arrangeRows( array $data ) {
 		$out = [];
 		foreach ( $this->fields as $name => $value ) {
-			$out[] = $data[$name];
+			if(isset($data[$name])) {
+				$out[] = $data[$name];
+			} else {
+				$out[] = null;
+			}
 		}
 		return $out;
 	}

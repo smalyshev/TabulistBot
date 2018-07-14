@@ -1,5 +1,8 @@
 <?php
 
+use GetOpt\GetOpt;
+use GetOpt\Option;
+
 require_once __DIR__ . '/vendor/autoload.php';
 
 define( 'DB_NAME', "tabulist" );
@@ -44,7 +47,7 @@ function updatePage( $wiki, $wikiServer, $page ) {
 	$ts = date( 'YmdHis' );
 
 	$tool_db->query( "UPDATE pagestatus SET `status`='RUNNING',`message`='',timestamp=:ts WHERE wiki=:wiki and page=:page",
-		['ts' => $ts, 'wiki' => $wiki . "wiki", 'page' => $page] );
+		['ts' => $ts, 'wiki' => $wiki, 'page' => $page] );
 
 	$handler = new PageHandler( $wikiServer, SPARQL_ENDPOINT );
 	if ( !$handler->updateTemplateData( $page, TEMPLATE ) ) {
@@ -57,9 +60,26 @@ function updatePage( $wiki, $wikiServer, $page ) {
 
 	$ts = date( 'YmdHis' );
 	$tool_db->query( "UPDATE pagestatus SET `status`=:status,`message`=:msg,timestamp=:ts WHERE wiki=:wiki and page=:page",
-		['ts' => $ts, 'wiki' => $wiki . "wiki", 'page' => $page, 'msg' => $message, "status" => $status] );
+		['ts' => $ts, 'wiki' => $wiki, 'page' => $page, 'msg' => $message, "status" => $status] );
 }
 
-// For now
-updateCommonsPagesList( 'commonswiki' );
-// updatePage( "commons", "commons.wikimedia.org", "Data_talk:Sandbox/Smalyshev/test.tab" );
+$getopt = new GetOpt( [
+	['h', 'help', GetOpt::NO_ARGUMENT, "Usage instructions"],
+	['u', 'update', GetOpt::NO_ARGUMENT, 'Update pages list'],
+	['p', 'page', GetOpt::REQUIRED_ARGUMENT, 'Update specific page'],
+] );
+
+$getopt->process();
+
+if($getopt->count() == 0 || $getopt->getOption('h')) {
+	echo $getopt->getHelpText();
+	exit(0);
+}
+
+if ( $getopt->getOption( 'u' ) ) {
+	updateCommonsPagesList( 'commonswiki' );
+}
+
+if ( $getopt->getOption( 'p' ) ) {
+	updatePage( "commonswiki", "commons.wikimedia.org", "Data_talk:Sandbox/Smalyshev/test.tab" );
+}
