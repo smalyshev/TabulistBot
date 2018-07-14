@@ -1,6 +1,7 @@
 <?php
 
 use Asparagus\QueryExecuter;
+use Mediawiki\Api\ApiUser;
 use Mediawiki\Api\MediawikiApi;
 use Mediawiki\Api\MediawikiFactory;
 use Mediawiki\DataModel\Content;
@@ -54,6 +55,19 @@ class PageHandler
 			return false;
 		}
 		return $pageRevision->getContent()->getData();
+	}
+
+	/**
+	 * Log in with credentials in file.
+	 * @param $creds_file
+	 * @throws \Mediawiki\Api\UsageException
+	 */
+	public function login( $creds_file ) {
+		if ( !file_exists( $creds_file ) ) {
+			throw new \Mediawiki\Api\UsageException( "Login creds file not found" );
+		}
+		$creds = parse_ini_file( $creds_file );
+		$this->api->login( new ApiUser( $creds['user'], $creds['pass'] ) );
 	}
 
 	private static $knownFields = [

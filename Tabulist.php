@@ -50,15 +50,19 @@ function updatePage( $wiki, $wikiServer, $page ) {
 		['ts' => $ts, 'wiki' => $wiki, 'page' => $page] );
 
 	$handler = new PageHandler( $wikiServer, SPARQL_ENDPOINT );
-	if ( $GLOBALS['VERBOSE'] ) {
-		$handler->debugMode( true );
-	}
-	if ( !$handler->updateTemplateData( $page, TEMPLATE ) ) {
-		$message = implode( "\n", $handler->getErrors() );
+	try {
+		$handler->login( __DIR__ . "/tabulist.ini" );
+//	$handler->debugMode( true );
+		if ( !$handler->updateTemplateData( $page, TEMPLATE ) ) {
+			$message = implode( "\n", $handler->getErrors() );
+			$status = "FAILED";
+		} else {
+			$message = $handler->getStatus();
+			$status = "OK";
+		}
+	} catch ( Exception $e ) {
 		$status = "FAILED";
-	} else {
-		$message = $handler->getStatus();
-		$status = "OK";
+		$message = $e->getMessage();
 	}
 
 	if ( $GLOBALS['VERBOSE'] ) {
@@ -84,9 +88,7 @@ if ( $getopt->count() == 0 || $getopt->getOption( 'h' ) ) {
 	exit( 0 );
 }
 
-if ( $getopt->getOption( 'v' ) ) {
-	$VERBOSE = true;
-}
+$VERBOSE = $getopt->getOption( 'v' );
 
 if ( $getopt->getOption( 'u' ) ) {
 	updateCommonsPagesList( 'commonswiki' );
