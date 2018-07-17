@@ -14,7 +14,7 @@ class ToolsDb
 
 	public function __construct( $host, $dbname ) {
 		$ts_mycnf = self::getConfig();
-		$this->database = $db = new PDO( "mysql:host=$host;dbname=$dbname", $ts_mycnf['user'], $ts_mycnf['password'] );
+		$this->database = new PDO( "mysql:host=$host;dbname=$dbname;charset=utf8", $ts_mycnf['user'], $ts_mycnf['password'] );
 	}
 
 	public static function getReplica( $wiki ) {
