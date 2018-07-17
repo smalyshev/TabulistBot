@@ -135,6 +135,22 @@ class Tabulist
 	public function setVerbose( $verbose ) {
 		$this->verbose = $verbose;
 	}
+
+	public function updateRandomPages( $count ) {
+		$sql = "SELECT id FROM pagestatus WHERE wiki=:wiki 
+			AND status != 'RUNNING' AND status != 'FAILED' AND status != 'CHECKING' 
+			AND ts < :ts ORDER BY rand() LIMIT :count";
+		// Ignore pages that we've touched in the last hour
+		$cutoff = time() - 3600;
+		$result = $this->tool_db->query( $sql, ['count' => $count, 'wiki' => $this->wiki, 'ts' => $cutoff] );
+		foreach ( $result as $row ) {
+			$this->updatePage($row->id);
+		}
+		if ($this->verbose) {
+			print "{$result->rowCount()} pages updated.\n";
+		}
+
+	}
 }
 
 $getopt = new GetOpt( [
@@ -143,6 +159,7 @@ $getopt = new GetOpt( [
 	['l', 'list', GetOpt::NO_ARGUMENT, 'Show pages list'],
 	['s', 'show', GetOpt::REQUIRED_ARGUMENT, 'Show page data'],
 	['p', 'page', GetOpt::REQUIRED_ARGUMENT, 'Update specific page'],
+	['P', 'random', GetOpt::OPTIONAL_ARGUMENT, 'Update N (default:10) random pages', 10],
 	['v', 'verbose', GetOpt::NO_ARGUMENT, "More verbose output"],
 ] );
 
@@ -170,4 +187,8 @@ if ( $getopt->getOption( 's' ) ) {
 
 if ( $getopt->getOption( 'p' ) ) {
 	$tabulist->updatePage( $getopt->getOption( 'p' ) );
+}
+
+if ( $getopt->getOption( 'P' ) ) {
+	$tabulist->updateRandomPages( $getopt->getOption( 'P' ) );
 }
