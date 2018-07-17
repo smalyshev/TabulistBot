@@ -7,12 +7,12 @@ require_once __DIR__ . '/vendor/autoload.php';
 define( 'DATA_TALK_NS', 487 );
 // DB name - with underscore!
 define( 'TEMPLATE', 'Wikidata_tabular' );
-define( 'SPARQL_ENDPOINT', 'https://query.wikidata.org/sparql' );
 
 class Tabulist
 {
 
 	const DB_NAME = "tabulist";
+	const SPARQL_ENDPOINT = 'https://query.wikidata.org/sparql';
 	private $wiki;
 	private $verbose = false;
 
@@ -23,21 +23,25 @@ class Tabulist
 	 * @var PageHandler
 	 */
 	private $handler;
+	/**
+	 * @var ToolsDb
+	 */
+	private $tool_db;
 
 	public function __construct( $wiki ) {
 		$this->wiki = $wiki;
 		if ( !isset( self::$servers[$wiki] ) ) {
 			throw new InvalidArgumentException( "Unknown wiki $wiki" );
 		}
-		$this->handler = new PageHandler( self::$servers[$wiki], SPARQL_ENDPOINT );
+		$this->handler = new PageHandler( self::$servers[$wiki], self::SPARQL_ENDPOINT );
+		$this->tool_db = ToolsDb::getLocal( self::DB_NAME );
 	}
 
 	public function updateCommonsPagesList() {
 		$ts = date( 'YmdHis' );
-		$tool_db = ToolsDb::getLocal( self::DB_NAME );
 
 		$sql = "UPDATE pagestatus SET `status`='CHECKING' WHERE wiki=:wiki AND page LIKE 'Data_talk:%'";
-		$tool_db->query( $sql, ['wiki' => $this->wiki] );
+		$this->tool_db->query( $sql, ['wiki' => $this->wiki] );
 
 		$replica = ToolsDb::getReplica( $this->wiki );
 
@@ -58,28 +62,44 @@ class Tabulist
 				VALUES (:wiki,:page,'WAITING','',:ts)
 				ON DUPLICATE KEY UPDATE status='WAITING',message='',timestamp=:ts";
 
-			$tool_db->query( $sql, ['wiki' => $this->wiki, 'page' => $page, 'ts' => $ts] );
+			$this->tool_db->query( $sql, ['wiki' => $this->wiki, 'page' => $page, 'ts' => $ts] );
 		}
 
-		$tool_db->query( "DELETE FROM pagestatus WHERE `status`='CHECKING' AND wiki=:wiki",
+		$this->tool_db->query( "DELETE FROM pagestatus WHERE `status`='CHECKING' AND wiki=:wiki",
 			['wiki' => $this->wiki] );
 	}
 
-	public function updatePage( $page ) {
-		$tool_db = ToolsDb::getLocal( self::DB_NAME );
+	public function getPage( $pageId ) {
+		$sql = "SELECT id,status,page FROM pagestatus WHERE wiki=:wiki AND id=:id ORDER BY id ASC";
+		$result = $this->tool_db->query( $sql, ['id' => $pageId, 'wiki' => $this->wiki] );
+		foreach ( $result as $row ) {
+			return $row;
+		}
+		return null;
+	}
+
+	public function updatePage( $pageId ) {
 		$ts = date( 'YmdHis' );
 
-		$tool_db->query( "UPDATE pagestatus SET `status`='RUNNING',`message`='',timestamp=:ts WHERE wiki=:wiki and page=:page",
-			['ts' => $ts, 'wiki' => $this->wiki, 'page' => $page] );
+		$pageData = $this->getPage( $pageId );
+		if ( !$pageData ) {
+			if ( $this->verbose ) {
+				print "Page $pageId not found";
+			}
+			return false;
+		}
+
+		$this->tool_db->query( "UPDATE pagestatus SET `status`='RUNNING',`message`='',timestamp=:ts WHERE wiki=:wiki and page=:page",
+			['ts' => $ts, 'wiki' => $this->wiki, 'id' => $pageId] );
 
 		try {
 			$this->handler->login( __DIR__ . "/tabulist.ini" );
 //	$handler->debugMode( true );
-			if ( !$handler->updateTemplateData( $page, TEMPLATE ) ) {
-				$message = implode( "\n", $handler->getErrors() );
+			if ( !$this->handler->updateTemplateData( $pageData->page, TEMPLATE ) ) {
+				$message = implode( "\n", $this->handler->getErrors() );
 				$status = "FAILED";
 			} else {
-				$message = $handler->getStatus();
+				$message = $this->handler->getStatus();
 				$status = "OK";
 			}
 		} catch ( Exception $e ) {
@@ -92,17 +112,21 @@ class Tabulist
 		}
 
 		$ts = date( 'YmdHis' );
-		$tool_db->query( "UPDATE pagestatus SET `status`=:status,`message`=:msg,timestamp=:ts WHERE wiki=:wiki and page=:page",
-			['ts' => $ts, 'wiki' => $this->wiki, 'page' => $page, 'msg' => $message, "status" => $status] );
+		$this->tool_db->query( "UPDATE pagestatus SET `status`=:status,`message`=:msg,timestamp=:ts WHERE wiki=:wiki and page=:page",
+			['ts' => $ts, 'wiki' => $this->wiki, 'id' => $pageId, 'msg' => $message, "status" => $status] );
 	}
 
 	public function listPages() {
-		$tool_db = ToolsDb::getLocal( self::DB_NAME );
 		$sql = "SELECT id,status,page FROM pagestatus WHERE wiki=:wiki ORDER BY id ASC";
-		$result = $tool_db->query( $sql, ['wiki' => $this->wiki] );
+		$result = $this->tool_db->query( $sql, ['wiki' => $this->wiki] );
 		foreach ( $result as $row ) {
 			print "{$row->id}\t{$row->status}\t{$row->page}\n";
 		}
+	}
+
+	public function showPage( $pageId ) {
+		$pageData = $this->getPage( $pageId );
+		var_dump( $pageData );
 	}
 
 	/**
@@ -117,6 +141,7 @@ $getopt = new GetOpt( [
 	['h', 'help', GetOpt::NO_ARGUMENT, "Usage instructions"],
 	['u', 'update', GetOpt::NO_ARGUMENT, 'Update pages list'],
 	['l', 'list', GetOpt::NO_ARGUMENT, 'Show pages list'],
+	['s', 'show', GetOpt::REQUIRED_ARGUMENT, 'Show page data'],
 	['p', 'page', GetOpt::REQUIRED_ARGUMENT, 'Update specific page'],
 	['v', 'verbose', GetOpt::NO_ARGUMENT, "More verbose output"],
 ] );
@@ -139,6 +164,10 @@ if ( $getopt->getOption( 'l' ) ) {
 	$tabulist->listPages();
 }
 
+if ( $getopt->getOption( 's' ) ) {
+	$tabulist->showPage( $getopt->getOption( 's' ) );
+}
+
 if ( $getopt->getOption( 'p' ) ) {
-	$tabulist->updatePage( "Data_talk:Sandbox/Smalyshev/test.tab" );
+	$tabulist->updatePage( $getopt->getOption( 'p' ) );
 }
