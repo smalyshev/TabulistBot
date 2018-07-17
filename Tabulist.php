@@ -104,7 +104,7 @@ class Tabulist
 			}
 		} catch ( Exception $e ) {
 			$status = "FAILED";
-			$message = $e->getMessage();
+			$message = "Exception: " . $e->getMessage();
 		}
 
 		if ( $this->verbose ) {
