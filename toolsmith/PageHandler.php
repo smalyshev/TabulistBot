@@ -79,7 +79,7 @@ class PageHandler
 	];
 
 	private function parseField( $field, array &$fields ) {
-		if ( strpos( $field, ':' ) === -1 ) {
+		if ( strpos( $field, ':' ) === false ) {
 			$type = "string";
 		} else {
 			list( $field, $type ) = explode( ':', $field, 2 );

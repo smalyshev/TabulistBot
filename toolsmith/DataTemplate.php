@@ -54,12 +54,16 @@ class DataTemplate
 		return substr( $value, self::PREFIX_LEN );
 	}
 
-	protected function dateFormat($value) {
+	protected function dateFormat( $value ) {
 		// 2003-05-01T00:00:00Z -> 2003-05-01
-		if(preg_match('/(\d+-\d+-\d+)T\d\d:\d\d:\d\dZ/', $value, $m)) {
+		if ( preg_match( '/(\d+-\d+-\d+)T\d\d:\d\d:\d\dZ/', $value, $m ) ) {
 			return $m[1];
 		}
 		return $value;
+	}
+
+	protected function intFormat( $value ) {
+		return (int)$value;
 	}
 
 	/**
@@ -71,7 +75,7 @@ class DataTemplate
 	public function arrangeRows( array $data ) {
 		$out = [];
 		foreach ( $this->fields as $name => $value ) {
-			if(isset($data[$name])) {
+			if ( isset( $data[$name] ) ) {
 				$out[] = $data[$name];
 			} else {
 				$out[] = null;
