@@ -70,7 +70,7 @@ class Tabulist
 	}
 
 	public function getPage( $pageId ) {
-		$sql = "SELECT id,status,page FROM pagestatus WHERE wiki=:wiki AND id=:id ORDER BY id ASC";
+		$sql = "SELECT * FROM pagestatus WHERE wiki=:wiki AND id=:id ORDER BY id ASC";
 		$result = $this->tool_db->query( $sql, ['id' => $pageId, 'wiki' => $this->wiki] );
 		foreach ( $result as $row ) {
 			return $row;
@@ -89,7 +89,7 @@ class Tabulist
 			return false;
 		}
 
-		$this->tool_db->query( "UPDATE pagestatus SET `status`='RUNNING',`message`='',timestamp=:ts WHERE wiki=:wiki and page=:page",
+		$this->tool_db->query( "UPDATE pagestatus SET `status`='RUNNING',`message`='',timestamp=:ts WHERE wiki=:wiki and id=:id",
 			['ts' => $ts, 'wiki' => $this->wiki, 'id' => $pageId] );
 
 		try {
@@ -112,7 +112,7 @@ class Tabulist
 		}
 
 		$ts = date( 'YmdHis' );
-		$this->tool_db->query( "UPDATE pagestatus SET `status`=:status,`message`=:msg,timestamp=:ts WHERE wiki=:wiki and page=:page",
+		$this->tool_db->query( "UPDATE pagestatus SET `status`=:status,`message`=:msg,timestamp=:ts WHERE wiki=:wiki and id=:id",
 			['ts' => $ts, 'wiki' => $this->wiki, 'id' => $pageId, 'msg' => $message, "status" => $status] );
 	}
 
