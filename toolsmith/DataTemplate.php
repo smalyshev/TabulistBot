@@ -54,10 +54,19 @@ class DataTemplate
 		return substr( $value, self::PREFIX_LEN );
 	}
 
+	protected function dateFormat($value) {
+		// 2003-05-01T00:00:00Z -> 2003-05-01
+		if(preg_match('/(\d+-\d+-\d+)T\d\d:\d\d:\d\dZ/', $value, $m)) {
+			return $m[1];
+		}
+		return $value;
+	}
+
 	/**
 	 * Arrange data according to the order of fields.
 	 * Keys are not preserved.
 	 * @param array $data
+	 * @return array Arranged data.
 	 */
 	public function arrangeRows( array $data ) {
 		$out = [];

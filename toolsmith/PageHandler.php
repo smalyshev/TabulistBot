@@ -78,6 +78,22 @@ class PageHandler
 		'qid'         => 'item'
 	];
 
+	private function parseField( $field, array &$fields ) {
+		if ( strpos( $field, ':' ) === -1 ) {
+			$type = "string";
+		} else {
+			list( $field, $type ) = explode( ':', $field, 2 );
+		}
+		if ( $field[0] === '?' ) {
+			$fields[substr($field, 1)] = $type;
+		} else if ( isset( self::$knownFields[$field] ) ) {
+			$fields[$field] = self::$knownFields[$field];
+		} else {
+			return $this->error( "Unknown field: [$field]" );
+		}
+		return true;
+	}
+
 	/**
 	 * @param $text
 	 * @param $template
@@ -112,12 +128,8 @@ TEMPLATE;
 			];
 		} else {
 			foreach ( explode( ',', $templateData['columns'] ) as $column ) {
-				if ( $column[0] === '?' ) {
-					$fields[substr( $column, 1 )] = "string";
-				} else if ( isset( self::$knownFields[$column] ) ) {
-					$fields[$column] = self::$knownFields[$column];
-				} else {
-					return $this->error( "Unknown field: [$column]" );
+				if(!$this->parseField($column, $fields)) {
+					return false;
 				}
 			}
 		}
