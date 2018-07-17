@@ -66,6 +66,10 @@ class DataTemplate
 		return (int)$value;
 	}
 
+	protected function numberFormat( $value ) {
+		return (float)$value;
+	}
+
 	/**
 	 * Arrange data according to the order of fields.
 	 * Keys are not preserved.
