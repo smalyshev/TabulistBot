@@ -22,7 +22,11 @@ class TermFetcher
 			$sql = "SELECT term_full_entity_id,term_language,term_text FROM wb_terms WHERE term_full_entity_id IN ($params) AND term_type='$type'";
 			$results = $this->db->query( $sql, $chunk );
 			foreach ( $results as $result ) {
-				$out[$result->term_full_entity_id][$result->term_language] = $result->term_text;
+				$text = $result->term_text;
+				if ( !json_encode( $result->term_text ) ) {
+					$text = "Invalid UTF8!";
+				}
+				$out[$result->term_full_entity_id][$result->term_language] = $text;
 			}
 		}
 		return $out;
