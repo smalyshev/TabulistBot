@@ -144,9 +144,9 @@ class Tabulist
 		$cutoff = time() - 3600;
 		$result = $this->tool_db->query( $sql, ['count' => $count, 'wiki' => $this->wiki, 'ts' => $cutoff] );
 		foreach ( $result as $row ) {
-			$this->updatePage($row->id);
+			$this->updatePage( $row->id );
 		}
-		if ($this->verbose) {
+		if ( $this->verbose ) {
 			print "{$result->rowCount()} pages updated.\n";
 		}
 
