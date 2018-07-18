@@ -108,7 +108,7 @@ class Tabulist
 		}
 
 		$this->tool_db->query( "UPDATE pagestatus SET `status`='RUNNING',`message`='',timestamp=:ts WHERE wiki=:wiki and id=:id",
-			['ts' => $ts, 'wiki' => $this->wiki, 'id' => $pageData] );
+			['ts' => $ts, 'wiki' => $this->wiki, 'id' => $pageId] );
 
 		try {
 			$this->handler->login( __DIR__ . "/tabulist.ini" );
