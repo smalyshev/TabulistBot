@@ -69,7 +69,7 @@ class Tabulist
 			['wiki' => $this->wiki] );
 	}
 
-	public function getPage( $pageId ) {
+	public function getPageById( $pageId ) {
 		$sql = "SELECT * FROM pagestatus WHERE wiki=:wiki AND id=:id ORDER BY id ASC";
 		$result = $this->tool_db->query( $sql, ['id' => $pageId, 'wiki' => $this->wiki] );
 		foreach ( $result as $row ) {
@@ -78,10 +78,23 @@ class Tabulist
 		return null;
 	}
 
+	public function getPageByTitle( $title ) {
+		$sql = "SELECT * FROM pagestatus WHERE wiki=:wiki AND page=:page ORDER BY id ASC";
+		$result = $this->tool_db->query( $sql, ['page' => $title, 'wiki' => $this->wiki] );
+		foreach ( $result as $row ) {
+			return $row;
+		}
+		return null;
+	}
+
 	public function updatePage( $pageId ) {
+		if ( !$pageId ) {
+			print "No such page";
+			return false;
+		}
 		$ts = date( 'YmdHis' );
 
-		$pageData = $this->getPage( $pageId );
+		$pageData = $this->getPageById( $pageId );
 		if ( !$pageData ) {
 			if ( $this->verbose ) {
 				print "Page $pageId not found";
@@ -125,7 +138,7 @@ class Tabulist
 	}
 
 	public function showPage( $pageId ) {
-		$pageData = $this->getPage( $pageId );
+		$pageData = $this->getPageById( $pageId );
 		var_dump( $pageData );
 	}
 
