@@ -94,12 +94,16 @@ class Tabulist
 		}
 		$ts = date( 'YmdHis' );
 
-		$pageData = $this->getPageById( $pageId );
-		if ( !$pageData ) {
-			if ( $this->verbose ) {
-				print "Page $pageId not found";
+		if ( $pageId instanceof stdClass ) {
+			$pageData = $pageId;
+		} else {
+			$pageData = $this->getPageById( $pageId );
+			if ( !$pageData ) {
+				if ( $this->verbose ) {
+					print "Page $pageId not found";
+				}
+				return false;
 			}
-			return false;
 		}
 
 		$this->tool_db->query( "UPDATE pagestatus SET `status`='RUNNING',`message`='',timestamp=:ts WHERE wiki=:wiki and id=:id",
