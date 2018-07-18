@@ -96,6 +96,7 @@ class Tabulist
 
 		if ( $pageId instanceof stdClass ) {
 			$pageData = $pageId;
+			$pageId = $pageData->id;
 		} else {
 			$pageData = $this->getPageById( $pageId );
 			if ( !$pageData ) {
@@ -107,7 +108,7 @@ class Tabulist
 		}
 
 		$this->tool_db->query( "UPDATE pagestatus SET `status`='RUNNING',`message`='',timestamp=:ts WHERE wiki=:wiki and id=:id",
-			['ts' => $ts, 'wiki' => $this->wiki, 'id' => $pageId] );
+			['ts' => $ts, 'wiki' => $this->wiki, 'id' => $pageData] );
 
 		try {
 			$this->handler->login( __DIR__ . "/tabulist.ini" );
